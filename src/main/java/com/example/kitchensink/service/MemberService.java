@@ -4,7 +4,6 @@ import com.example.kitchensink.exception.BusinessValidationException;
 import com.example.kitchensink.model.Member;
 import com.example.kitchensink.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
-import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -20,7 +19,7 @@ public class MemberService {
         return memberRepository.findAll();
     }
 
-    public Optional<Member> findById(ObjectId id) {
+    public Optional<Member> findById(String id) {
         return memberRepository.findById(id);
     }
 
@@ -28,9 +27,12 @@ public class MemberService {
         return memberRepository.save(member);
     }
 
-    public boolean deleteById(ObjectId id) {
-        memberRepository.deleteById(id);
-        return false;
+    public boolean deleteById(String id) {
+        if (memberRepository.existsById(id)) {
+            memberRepository.deleteById(id);
+            return true; // indicate success
+        }
+        return false; // no such record
     }
 
     public Optional<Member> findByEmail(String email) {
@@ -42,7 +44,7 @@ public class MemberService {
         return memberRepository.save(member);
     }
 
-    public Optional<Member> updateMember(ObjectId id, Member updatedMember) {
+    public Optional<Member> updateMember(String id, Member updatedMember) {
         validateMember(updatedMember, id);
         return memberRepository.findById(id)
                 .map(existing -> {
@@ -53,7 +55,7 @@ public class MemberService {
                 });
     }
 
-    private void validateMember(Member member, ObjectId currentMemberId) {
+    private void validateMember(Member member, String currentMemberId) {
         // Email uniqueness
         memberRepository.findByEmail(member.getEmail())
                 .ifPresent(existing -> {
@@ -62,10 +64,6 @@ public class MemberService {
                     }
                 });
 
-        // Phone format check
-        if (!member.getPhoneNumber().matches("^(\\+\\d{1,3}[- ]?)?\\d{10}$")) {
-            throw new BusinessValidationException("Invalid phone number format.");
-        }
     }
 
 }

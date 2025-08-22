@@ -4,7 +4,6 @@ import com.example.kitchensink.model.Member;
 import com.example.kitchensink.service.MemberService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.bson.types.ObjectId;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -25,7 +24,7 @@ public class MemberController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Member> getMemberById(@PathVariable ObjectId id) {
+    public ResponseEntity<Member> getMemberById(@PathVariable String id) {
         return memberService.findById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -38,14 +37,14 @@ public class MemberController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Member> updateMember(@PathVariable ObjectId id, @Valid @RequestBody Member updatedMember) {
+    public ResponseEntity<Member> updateMember(@PathVariable String id, @Valid @RequestBody Member updatedMember) {
         return memberService.updateMember(id, updatedMember)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteMember(@PathVariable ObjectId id) {
+    public ResponseEntity<Void> deleteMember(@PathVariable String id) {
         if (memberService.deleteById(id)) {
             return ResponseEntity.noContent().build();
         }

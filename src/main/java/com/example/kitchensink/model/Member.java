@@ -10,7 +10,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -23,7 +22,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class Member {
 
     @Id
-    private ObjectId id; // MongoDB ObjectId as String
+    private String id; // MongoDB ObjectId as String
 
     @NotNull
     @Size(min = 1, max = 25)

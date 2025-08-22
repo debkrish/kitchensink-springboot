@@ -7,15 +7,20 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -40,8 +45,13 @@ public class AuthController {
                             request.getUsername(),
                             request.getPassword())
             );
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
 
-            String token = jwtUtils.generateToken(authentication.getName());
+            Map<String, Object> claims = new HashMap<>();
+            claims.put("roles", userDetails.getAuthorities().stream()
+                    .map(GrantedAuthority::getAuthority)  // e.g. "ROLE_ADMIN", "ROLE_USER"
+                    .collect(Collectors.toList()));
+            String token = jwtUtils.generateToken(authentication.getName(), claims);
             return ResponseEntity.ok(Map.of("token", token));
         } catch (AuthenticationException e) {
             return ResponseEntity.status(401).body(Map.of("error", "Invalid username or password"));
@@ -49,13 +59,21 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<User> register(@RequestBody RegisterRequest request) {
-        User user = userService.registerUser(
-                request.getUsername(),
-                request.getPassword(),
-                request.getRoles()
-        );
-        return ResponseEntity.ok(user);
+    public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
+
+        try{
+            User user = userService.registerUser(
+                    request.getUsername(),
+                    request.getPassword(),
+                    request.getRoles()
+            );
+            return ResponseEntity.ok(Map.of("message", "User registered successfully"));
+        } catch (RuntimeException e) {
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", e.getMessage()));
+        }
+
     }
     // Simple DTO for login request
     @Setter
